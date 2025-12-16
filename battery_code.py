@@ -106,10 +106,11 @@ async def v_integrity_check(stop_trigger):
 async def setpoint_handler(stop_trigger, pause_trigger, setpoint_current):
     csv_setpoints = read_csv()
     while not stop_trigger.is_set():
-        if not pause_trigger.is_set():
-            await pause_trigger.wait()   # wait until restart
 
         for line in csv_setpoints:
+            if not pause_trigger.is_set():
+                await pause_trigger.wait()   # wait until restart
+
             async with setpoint_current.lock:
                 setpoint_current.value = int(line[1])
                 setpoint_time = float(line[0])
@@ -127,8 +128,6 @@ async def logger(stop_trigger, pause_trigger, task, setpoint_current):
     start_time = time.time()
 
     while not stop_trigger.is_set():
-        if not pause_trigger.is_set():
-            await pause_trigger.wait()   # wait until restart
 
         async with setpoint_current.lock:
             data = read_data(start_time, row_index, task, setpoint_current.value)
@@ -150,9 +149,11 @@ async def user_input(stop_trigger, pause_trigger):
         cmd = await asyncio.to_thread(input, "Comando (p=pause, r=resume, q=quit): ")
         if cmd == "p":
             pause_trigger.clear()
+            inst.write("OUTP 0")
             print("Script is having a break...")
         elif cmd == "r":
             pause_trigger.set()
+            inst.write("OUTP 1")
             print("Script is starting again...")
         elif cmd == "q":
             stop_trigger.set()
