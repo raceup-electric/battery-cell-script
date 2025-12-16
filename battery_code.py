@@ -122,7 +122,7 @@ async def setpoint_handler(stop_trigger, pause_trigger, setpoint_current):
         
         stop_trigger.set()
 
-async def logger(stop_trigger, pause_trigger, task, setpoint_current):
+async def logger(stop_trigger, task, setpoint_current):
     row_index = 1
     save_counter = 0
     start_time = time.time()
@@ -194,7 +194,7 @@ async def main():
             asyncio.create_task(user_input(stop_trigger, pause_trigger)),
             asyncio.create_task(v_integrity_check(stop_trigger)),
             asyncio.create_task(setpoint_handler(stop_trigger, pause_trigger, setpoint_current)),
-            asyncio.create_task(logger(stop_trigger, pause_trigger, task, setpoint_current)),
+            asyncio.create_task(logger(stop_trigger, task, setpoint_current)),
         ]
     
         # ASYNC BLOCK 
