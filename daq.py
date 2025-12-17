@@ -26,6 +26,12 @@ with nidaqmx.Task() as task:
     canale6 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai5", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.J)
     canale6.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
     
+    canale7 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai6", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
+    canale7.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
+    
+    canale8 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai7", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
+    canale8.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
+    
     
     task.timing.cfg_samp_clk_timing(10.0, sample_mode=AcquisitionType.CONTINUOUS)
     task.start()
@@ -42,7 +48,10 @@ with nidaqmx.Task() as task:
             temp4 = float(sample[4])
             temp5 = float(sample[5])
             temp6 = float(sample[6])
-            print(f"{kg:.2f} kg | temp1: {temp1:.2f} °C | temp2: {temp2:.2f} °C | temp3: {temp3:.2f} °C | temp4: {temp4:.2f} °C | temp5: {temp5:.2f} °C | temp6: {temp6:.2f} °C")
+            temp7 = float(sample[7])
+            temp8 = float(sample[8])
+            print(f"{kg:.2f} kg | t1: {temp1:.2f} °C | t2: {temp2:.2f} °C | t3: {temp3:.2f} °C | t4: {temp4:.2f} °C | t5: {temp5:.2f} °C | Tamb: {temp6:.2f} °C | t7: {temp7:.2f} °C | t8: {temp8:.2f} °C")
             
     except KeyboardInterrupt:
         print("Acquisition stopped by user.")
+
