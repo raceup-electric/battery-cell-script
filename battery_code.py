@@ -10,8 +10,8 @@ import asyncio
 # =========================
 # SETTINGS
 # =========================
-CSV_FILE = "square_wave.csv"
-LOG_FILE = "test_sorato_6_log.xlsx"
+CSV_FILE = "test.csv" #RICORDARSI DI CAMBIARE NOME FILE
+LOG_FILE = "test_IR_carica_log.xlsx" #RICORDARSI DI CAMBIARE NOME FILE
 COM_PORT = "COM6"
 MIN_VOLT = 3.0
 MAX_VOLT = 4.3
@@ -21,7 +21,7 @@ MAX_VOLT = 4.3
 wb = openpyxl.Workbook()
 ws = wb.active
 ws.title = "Log"
-ws.append(["Index", "Time (s)", "Voltage (V)", "Setpoint (A)", "Current (A)", "Ah", "Wh", "Weight (kg)", "T1 (°C)", "T2 (°C)", "T3 (°C)", "T4 (°C)", "T5 (°C)"])
+ws.append(["Index", "Time (s)", "Voltage (V)", "Setpoint (A)", "Current (A)", "Ah", "Wh", "Weight (kg)", "T1 (°C)", "T2 (°C)", "T3 (°C)", "T4 (°C)", "T5 (°C)", "Tamb (°C)", "T7 (°C)", "T8(°C)"])
 
 
 # POWER SUPPLY
@@ -90,9 +90,11 @@ def read_data(start_time, row_index, task, setpoint_current):
     temp4 = float(sample[4])
     temp5 = float(sample[5])
     temp6 = float(sample[6])
+    temp7 = float(sample[7])
+    temp8 = float(sample[8])
     
-    print(f"\r#{row_index} | t={t:.1f}s | V={v:.2f} V | I={i:.3f} A | Ah={Ah:.3f} | Wh={Wh:.3f} | kg={pressure_kg:.3f} | t1={temp1:.3f} | t2={temp2:.3f} | t3={temp3:.3f} | t4={temp4:.3f} | t5={temp5:.3f} | Tambient={temp6:.3f}", end="")
-    return [row_index, t, v, setpoint_current, i, Ah, Wh, pressure_kg, temp1, temp2, temp3, temp4, temp5, temp6]
+    print(f"\r#{row_index} | t={t:.1f}s | V={v:.3f} V | I={i:.3f} A | Ah={Ah:.2f} | Wh={Wh:.2f} | kg={pressure_kg:.0f} | t1: {temp1:.2f} | t2: {temp2:.2f} | t3: {temp3:.2f} | t4: {temp4:.2f} | t5: {temp5:.2f} | Tamb: {temp6:.2f} | t7: {temp7:.2f} | t8: {temp8:.2f}", end="")
+    return [row_index, t, v, setpoint_current, i, Ah, Wh, pressure_kg, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8]
 
 async def v_integrity_check(stop_trigger):
     while not stop_trigger.is_set():
@@ -112,8 +114,8 @@ async def setpoint_handler(stop_trigger, pause_trigger, setpoint_current):
                 await pause_trigger.wait()   # wait until restart
 
             async with setpoint_current.lock:
-                setpoint_current.value = float(line[1])
                 setpoint_time = float(line[0])
+                setpoint_current.value = float(line[1])
 
                 print(f"\nApplying I = {setpoint_current.value} A for {setpoint_time} seconds...")
                 set_current(setpoint_current.value)
@@ -139,13 +141,7 @@ async def logger(stop_trigger, task, setpoint_current):
             # Write Excel
             ws.append(data)
             row_index += 1
-
-            # Save periodically
-            save_counter += 1
-            if save_counter >= 100:
-                wb.save(LOG_FILE)
-                save_counter = 0
-
+            
         await asyncio.sleep(0.1)
 
 async def user_input(stop_trigger, pause_trigger):
@@ -192,6 +188,12 @@ async def main():
         
         canale6 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai5", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.J)
         canale6.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
+
+        canale7 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai6", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
+        canale7.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
+
+        canale8 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai7", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
+        canale8.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
         
         task.timing.cfg_samp_clk_timing(10.0, sample_mode=AcquisitionType.CONTINUOUS)
         task.start()
@@ -212,6 +214,8 @@ async def main():
             stop_trigger.set()
         except Exception as e:
             print(f"\n*** ERROR OCCURRED: {e} ***")
+            wb.save(LOG_FILE)
+            inst.write("OUTP 0")
             stop_trigger.set()
         finally:
             # Task deletion procedure
