@@ -52,7 +52,10 @@ class SharedData:
 # FUNZIONI
 def set_current(current):
     inst.source.current(current)
-    inst.write("OUTP 1")
+    if current != 0:
+        inst.write("OUTP 1")
+    else:
+        inst.write("OUTP 0")
 
 def read_csv():
     data = []
