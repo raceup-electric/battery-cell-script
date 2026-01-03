@@ -41,7 +41,7 @@ inst.source.current(CURRENT)
 inst.write("VOLT:LIM " + str(MAX_VOLT))
 inst.write("VOLT:LIM:NEG " + str(MIN_VOLT))
 
-def read_data(start_time, row_index, CURRENT):
+def read_data(start_time, row_index, task, CURRENT):
     t = time.time() - start_time
     
     v = float(inst.query("FETC:SCAL:VOLT?"))
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             while True:
                 
                 try:
-                    data = read_data(start_time, row_index, task, setpoint_current.value)
+                    data = read_data(start_time, row_index, task, CURRENT)
                 except Exception as e:
                     print(f"\nErrore lettura dati: {e}")
                 
