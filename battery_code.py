@@ -10,8 +10,8 @@ import asyncio
 # =========================
 # SETTINGS
 # =========================
-CSV_FILE = "test.csv" #RICORDARSI DI CAMBIARE NOME FILE
-LOG_FILE = "test_IR_carica_log.xlsx" #RICORDARSI DI CAMBIARE NOME FILE
+CSV_FILE = "gitt.csv" #RICORDARSI DI CAMBIARE NOME FILE
+LOG_FILE = "test_GITT_prova_log.xlsx" #RICORDARSI DI CAMBIARE NOME FILE
 COM_PORT = "COM6"
 MIN_VOLT = 3.0
 MAX_VOLT = 4.3
@@ -51,8 +51,8 @@ class SharedData:
 
 # FUNZIONI
 def set_current(current):
-    inst.source.current(current)
     if current != 0:
+        inst.source.current(current)
         inst.write("OUTP 1")
     else:
         inst.write("OUTP 0")
@@ -216,18 +216,15 @@ async def main():
             stop_trigger.set()
         except Exception as e:
             print(f"\n*** ERROR OCCURRED: {e} ***")
-            wb.save(LOG_FILE)
-            inst.write("OUTP 0")
             stop_trigger.set()
         finally:
+            inst.write("OUTP 0")
             # Task deletion procedure
             for t in tasks:
                 t.cancel()           
             await asyncio.gather(*tasks, return_exceptions=True)
-            inst.write("OUTP 0")
             wb.save(LOG_FILE)        
             print(f"\nSaved to {LOG_FILE}")
-            print("\n=== DONE ===")
 
     print("System stopped safely")
 
