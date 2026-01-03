@@ -41,7 +41,7 @@ inst.source.current(CURRENT)
 inst.write("VOLT:LIM " + str(MAX_VOLT))
 inst.write("VOLT:LIM:NEG " + str(MIN_VOLT))
 
-def read_data(start_time, row_index, task, CURRENT):
+def read_data(start_time, row_index, task, setpoint_current):
     t = time.time() - start_time
     
     v = float(inst.query("FETC:SCAL:VOLT?"))
@@ -135,4 +135,4 @@ if __name__ == "__main__":
             print(f"\nSaved to {LOG_FILE}")
             print("\n=== DONE ===")
 
-print("System stopped safely")
+    print("System stopped safely")
