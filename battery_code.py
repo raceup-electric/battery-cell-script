@@ -104,7 +104,7 @@ async def v_integrity_check(stop_trigger):
         v = float(inst.query("FETC:SCAL:VOLT?"))
         if v > MAX_VOLT or v < MIN_VOLT:
             print(f"\nVoltage limit reached (V = {v:.2f}), stopping step early.", end="")
-            stop_trigger.set()
+            pause_trigger.clear()
 
         await asyncio.sleep(0.01)
 
