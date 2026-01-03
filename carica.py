@@ -14,6 +14,7 @@ COM_PORT = "COM6"
 MIN_VOLT = 3.0
 MAX_VOLT = 4.3
 CURRENT  = 17.8
+STOP_CURRENT = 0.89
 
 # EXCEL FILE SETUP
 wb = openpyxl.Workbook()
@@ -40,7 +41,7 @@ inst.source.current(CURRENT)
 inst.write("VOLT:LIM " + str(MAX_VOLT))
 inst.write("VOLT:LIM:NEG " + str(MIN_VOLT))
 
-def read_data(start_time, row_index, task, setpoint_current):
+def read_data(start_time, row_index, CURRENT):
     t = time.time() - start_time
     
     v = float(inst.query("FETC:SCAL:VOLT?"))
@@ -102,6 +103,9 @@ if __name__ == "__main__":
         print("\n=== STARTING ==")  
         inst.write("OUTP 1")
         
+        row_index = 1
+        start_time = time.time()
+        
         try:
             
             while True:
@@ -115,7 +119,7 @@ if __name__ == "__main__":
                 row_index += 1
                     
                 time.sleep(0.1)
-                if data[2] >= 3.86:
+                if data[4] < STOP_CURRENT:
                     print("\nCiclo completato automaticamente.")
                     break
 
