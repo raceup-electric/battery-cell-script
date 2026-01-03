@@ -1,10 +1,8 @@
 import openpyxl
 import time
 import easy_scpi as scpi
-import csv
 import nidaqmx
 from nidaqmx.constants import BridgeConfiguration, ADCTimingMode, AcquisitionType, TemperatureUnits, ThermocoupleType
-import asyncio
 
 # =========================
 # SETTINGS
@@ -71,7 +69,7 @@ if __name__ == "__main__":
     with nidaqmx.Task() as task:
     
         loadcell = task.ai_channels.add_ai_bridge_chan("cDAQ1Mod1/ai0", min_val = -0.05, max_val = 0.05, bridge_config = BridgeConfiguration.FULL_BRIDGE, nominal_bridge_resistance=350)
-        loadcell.ai_adc_timing_mode = ADCTimingMode.BEST_50_HZ_REJECTION
+        loadcell.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
         
         canale1 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai0", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
         canale1.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
@@ -97,12 +95,12 @@ if __name__ == "__main__":
         canale8 = task.ai_channels.add_ai_thrmcpl_chan("cDAQ1Mod2/ai7", min_val = 0.0, max_val = 100.0, units = TemperatureUnits.DEG_C, thermocouple_type = ThermocoupleType.K)
         canale8.ai_adc_timing_mode = ADCTimingMode.HIGH_RESOLUTION
         
-        task.timing.cfg_samp_clk_timing(10.0, sample_mode=AcquisitionType.CONTINUOUS)
+        task.timing.cfg_samp_clk_timing(1.0, sample_mode=AcquisitionType.CONTINUOUS)
         task.start()
         
         print("\n=== STARTING ==")  
         inst.write("OUTP 1")
-        
+        time.sleep(0.5)
         row_index = 1
         start_time = time.time()
         
@@ -118,7 +116,7 @@ if __name__ == "__main__":
                 ws.append(data)
                 row_index += 1
                     
-                time.sleep(0.1)
+                time.sleep(1)
                 if data[4] < STOP_CURRENT:
                     print("\nCiclo completato automaticamente.")
                     break
@@ -135,4 +133,4 @@ if __name__ == "__main__":
             print(f"\nSaved to {LOG_FILE}")
             print("\n=== DONE ===")
 
-    print("System stopped safely")
+print("System stopped safely")
