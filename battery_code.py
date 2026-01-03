@@ -129,7 +129,6 @@ async def setpoint_handler(stop_trigger, pause_trigger, setpoint_current):
 
 async def logger(stop_trigger, task, setpoint_current):
     row_index = 1
-    save_counter = 0
     start_time = time.time()
 
     while not stop_trigger.is_set():
