@@ -15,8 +15,8 @@ import asyncio
 # =========================
 # SETTINGS
 # =========================
-CSV_FILE  = "GITT_6C_pt2.csv"          # RICORDARSI DI CAMBIARE NOME FILE (FILE DATI ENTRATA)
-LOG_FILE  = "log_scarica_storage.xlsx"  # RICORDARSI DI CAMBIARE NOME FILE (FILE DATI USCITA)
+CSV_FILE  = "carica1C.csv"          # RICORDARSI DI CAMBIARE NOME FILE (FILE DATI ENTRATA)
+LOG_FILE  = "GITT_carica_1C_40°C_3impulsi_pt1.xlsx"  # RICORDARSI DI CAMBIARE NOME FILE (FILE DATI USCITA)
 COM_PORT  = "COM3"
 MIN_VOLT  = 2.75
 MAX_VOLT  = 4.45
@@ -117,17 +117,32 @@ def read_csv() -> list:
     return data
 
 
+_last_valid = [0 for s in range(11)]
+
 def read_daq(task) -> list:
     """
     Legge TUTTI i campioni disponibili nel buffer DAQmx e restituisce
     l'ultimo per ogni canale, così il buffer non va mai in overflow.
     """
-    samples = task.read(
-        number_of_samples_per_channel=READ_ALL_AVAILABLE,
-        timeout=0.5
-    )
-    # samples è una lista di liste (un elemento per canale)
-    return [s[-1] if isinstance(s, list) else s for s in samples]
+
+    global _last_valid
+    
+    try:
+        samples = task.read(
+            number_of_samples_per_channel=nidaqmx.constants.READ_ALL_AVAILABLE,
+            timeout=0.2  
+        )
+    except nidaqmx.errors.DaqError:
+        return _last_valid
+
+    current = [s[-1] if isinstance(s, list) and len(s) > 0 else None for s in samples]
+
+    # Se tutti i canali sono None → nessun campione reale
+    if any(v is None for v in current):
+        return _last_valid
+
+    _last_valid = current
+    return current
 
 
 def read_data(start_time: float, row_index: int,
@@ -158,7 +173,8 @@ def read_data(start_time: float, row_index: int,
         f"Ah={Ah:.2f} | Wh={Wh:.2f} | kg={pressure_kg:.0f} | "
         f"t1:{temp1:.2f} t2:{temp2:.2f} t3:{temp3:.2f} t4:{temp4:.2f} "
         f"t5:{temp5:.2f} Tamb:{temp6:.2f} t7:{temp7:.2f} t8:{temp8:.2f} "
-        f"t9:{temp9:.2f} t10:{temp10:.2f}",
+        f"t9:{temp9:.2f} t10:{temp10:.2f} ",
+        f"Setpoint:{setpoint_current:.2f}",
         end=""
     )
 
@@ -267,7 +283,7 @@ async def user_input(stop_trigger:  asyncio.Event,
 async def main() -> None:
     stop_trigger     = asyncio.Event()
     pause_trigger    = asyncio.Event()
-    pause_trigger.set()                          # parte non in pausa
+    #pause_trigger.set()                          # parte non in pausa
     setpoint_current = SharedData()
 
     print("\n=== AVVIO CICLI ===")
